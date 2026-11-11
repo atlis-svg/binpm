@@ -74,6 +74,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           pattern: binpm-*
@@ -93,6 +95,16 @@ jobs:
               esac
             done
           done
+          ls -la release
+
+      - name: Build the source tarball
+        env:
+          VERSION: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          version="${VERSION#v}"
+          git archive --format=tar.gz \
+            --prefix="binpm-${version}/" \
+            -o "release/binpm-${version}-source.tar.gz" HEAD
           ls -la release
 
       - name: Create the GitHub release

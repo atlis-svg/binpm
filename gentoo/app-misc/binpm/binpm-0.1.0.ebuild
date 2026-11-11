@@ -5,7 +5,7 @@ EAPI=8
 
 DESCRIPTION="A package manager for binaries: installs executables from GitHub releases and HTTP registries"
 HOMEPAGE="https://github.com/atlis-svg/binpm"
-SRC_URI="https://github.com/atlis-svg/binpm/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/atlis-svg/binpm/releases/download/v${PV}/${P}-${PV}-source.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/${PN}-${PV}"
 
 LICENSE="MIT"
