@@ -1,0 +1,18 @@
+{
+  "name": "hello-binpm",
+  "description": "Minimal example package used to demonstrate the registry format.",
+  "license": "MIT",
+  "assetUrlTemplate": "{baseUrl}/assets/{name}",
+  "versions": [
+    {
+      "version": "1.0.0",
+      "assets": [
+        {
+          "name": "hello-binpm-1.0.0-linux-x64.tar.gz",
+          "sha256": "599f3443d1f2ac54e16ea6d1c39d34223774516a8f832a2be116f2bab0170d64",
+          "bins": ["hello-binpm"]
+        }
+      ]
+    }
+  ]
+}

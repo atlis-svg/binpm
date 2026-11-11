@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+
+jobs:
+  build:
+    name: publish ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+          - os: macos-latest
+            rid: osx-x64
+          - os: macos-latest
+            rid: osx-arm64
+          - os: windows-latest
+            rid: win-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish a self-contained single-file binary
+        run: >
+          dotnet publish src/BinPm.Cli/BinPm.Cli.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:Version=${{ github.event.inputs.tag || github.ref_name }}
+          -o out
+
+      - name: Checksum
+        if: runner.os != 'Windows'
+        run: cd out && sha256sum binpm* > "binpm-${{ matrix.rid }}.sha256"
+
+      - name: Checksum
+        if: runner.os == 'Windows'
+        run: cd out && (Get-FileHash binpm.exe -Algorithm SHA256).Hash.ToLower() + "  binpm.exe" | Out-File -Encoding ascii "binpm-${{ matrix.rid }}.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binpm-${{ matrix.rid }}
+          path: out/binpm*
+          if-no-files-found: error
+
+  release:
+    name: attach binaries to the release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: binpm-*
+          path: artifacts
+
+      - name: Collect the binaries
+        run: |
+          mkdir -p release
+          for dir in artifacts/*/; do
+            rid="$(basename "$dir" | sed 's/^binpm-//')"
+            for file in "$dir"binpm*; do
+              base="$(basename "$file")"
+              case "$base" in
+                *.sha256) cp "$file" "release/binpm-$rid.sha256" ;;
+                *.exe)    cp "$file" "release/binpm-$rid.exe" ;;
+                *)        cp "$file" "release/binpm-$rid" ;;
+              esac
+            done
+          done
+          ls -la release
+
+      - name: Create the GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          version="${tag#v}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" release/* --clobber
+          else
+            gh release create "$tag" release/* --title "BinPm $version" --generate-notes
+          fi

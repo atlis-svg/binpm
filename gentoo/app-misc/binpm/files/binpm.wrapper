@@ -1,0 +1,19 @@
+#!/bin/sh
+# Launcher for the BinPm CLI installed by the Gentoo ebuild.
+# Prefers the slotted dotnet binary so the CLI keeps working across eselect changes.
+
+DOTNET_BIN=""
+
+for candidate in /usr/bin/dotnet-8.0 /usr/bin/dotnet; do
+	if [ -x "${candidate}" ]; then
+		DOTNET_BIN="${candidate}"
+		break
+	fi
+done
+
+if [ -z "${DOTNET_BIN}" ]; then
+	echo "binpm: no .NET runtime found (expected /usr/bin/dotnet-8.0)" >&2
+	exit 1
+fi
+
+exec "${DOTNET_BIN}" /usr/lib/binpm/binpm.dll "$@"

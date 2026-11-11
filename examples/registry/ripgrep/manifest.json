@@ -1,0 +1,31 @@
+{
+  "name": "ripgrep",
+  "description": "ripgrep recursively searches directories for a regex pattern.",
+  "homepage": "https://github.com/BurntSushi/ripgrep",
+  "license": "MIT",
+  "repository": "https://github.com/BurntSushi/ripgrep",
+  "assetUrlTemplate": "https://github.com/BurntSushi/ripgrep/releases/download/{version}/{name}",
+  "versions": [
+    {
+      "version": "14.1.1",
+      "published": "2024-09-10T00:00:00Z",
+      "assets": [
+        {
+          "name": "ripgrep-14.1.1-x86_64-unknown-linux-musl.tar.gz",
+          "sha256": "4cf9f2741e6c465ffdb7c26f38056a59e2a2544b51f7cc128ef28337eeae4d8e",
+          "bins": ["rg"]
+        },
+        {
+          "name": "ripgrep-14.1.1-x86_64-apple-darwin.tar.gz",
+          "sha256": "fc87e78f7cb3fea12d69072e7ef3b21509754717b746368fd40d88963630e2b3",
+          "bins": ["rg"]
+        },
+        {
+          "name": "ripgrep-14.1.1-x86_64-pc-windows-msvc.zip",
+          "sha256": "d0f534024c42afd6cb4d38907c25cd2b249b79bbe6cc1dbee8e3e37c2b6e2",
+          "bins": ["rg.exe"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>v0rt3xv1sta@gmail.com</email>
+		<name>atlis-svg</name>
+	</maintainer>
+	<longdescription lang="en">
+		BinPm is a package manager for binaries. It resolves a package to a version,
+		downloads the release asset that matches the running OS and CPU, verifies its
+		SHA-256 checksum, extracts it and puts the resulting commands on PATH.
+		Packages come from GitHub releases or from a static HTTP registry.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">atlis-svg/binpm</remote-id>
+	</upstream>
+	<use>
+		<flag name="test">Build and run the test suite. Needs network access to restore the xunit packages from NuGet.</flag>
+	</use>
+</pkgmetadata>

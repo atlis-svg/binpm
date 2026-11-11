@@ -1,0 +1,12 @@
+{
+  "packages": [
+    {
+      "name": "ripgrep",
+      "description": "ripgrep recursively searches directories for a regex pattern."
+    },
+    {
+      "name": "hello-binpm",
+      "description": "Minimal example package used to demonstrate the registry format."
+    }
+  ]
+}
