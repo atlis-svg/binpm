@@ -38,11 +38,19 @@ jobs:
             rid: win-x64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.0.x'
+
+      - name: Determine the version
+        id: ver
+        shell: bash
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
 
       - name: Publish a self-contained single-file binary
         run: >
@@ -51,7 +59,7 @@ jobs:
           -r ${{ matrix.rid }}
           --self-contained true
           -p:PublishSingleFile=true
-          -p:Version=${{ github.event.inputs.tag || github.ref_name }}
+          -p:Version=${{ steps.ver.outputs.version }}
           -o out
 
       - name: Checksum
@@ -60,9 +68,12 @@ jobs:
 
       - name: Checksum
         if: runner.os == 'Windows'
-        run: cd out && (Get-FileHash binpm.exe -Algorithm SHA256).Hash.ToLower() + "  binpm.exe" | Out-File -Encoding ascii "binpm-${{ matrix.rid }}.sha256"
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash out/binpm.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  binpm.exe" | Out-File -Encoding ascii "out/binpm-${{ matrix.rid }}.sha256"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: binpm-${{ matrix.rid }}
           path: out/binpm*
@@ -74,14 +85,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: binpm-*
           path: artifacts
 
+      - name: Determine the version
+        id: ver
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
       - name: Collect the binaries
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
         run: |
           mkdir -p release
           for dir in artifacts/*/; do
@@ -99,20 +119,19 @@ jobs:
 
       - name: Build the source tarball
         env:
-          VERSION: ${{ github.event.inputs.tag || github.ref_name }}
+          VERSION: ${{ steps.ver.outputs.version }}
         run: |
-          version="${VERSION#v}"
           git archive --format=tar.gz \
-            --prefix="binpm-${version}/" \
-            -o "release/binpm-${version}-source.tar.gz" HEAD
+            --prefix="binpm-${VERSION}/" \
+            -o "release/binpm-${VERSION}-source.tar.gz" HEAD
           ls -la release
 
       - name: Create the GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag="${{ github.event.inputs.tag || github.ref_name }}"
-          version="${tag#v}"
+          tag="${{ steps.ver.outputs.tag }}"
+          version="${{ steps.ver.outputs.version }}"
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" release/* --clobber
           else
